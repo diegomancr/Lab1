@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="glean-artifact-type" content="tracker_tables">
+<meta name="glean-artifact-type" content="web_design">
+<title>Branch Connector Configuration Viewer 2.4</title>
+<style>
+:root {
+  --artifact-background:#ffffff;--artifact-background-light:#f1f3f6;--artifact-background-mid:#e9ecf1;
+  --artifact-border-light:#e3e6ec;--artifact-border-dark:#cdd2db;--artifact-primary-brand:#3559e6;
+  --artifact-primary-highlight:#0d0f14;--artifact-primary-hover:#2442b8;--artifact-selected:#eaeefc;
+  --artifact-text-primary:#11141a;--artifact-text-secondary:#5c6470;--artifact-text-highlight:#e8eefc;
+  --artifact-positive-background:#e8f6ee;--artifact-positive-text:#11141a;--artifact-positive:#159a6a;
+  --artifact-negative:#dc4c4c;--artifact-change-background:#fff3d6;--artifact-change-text:#6f4b00;
+  --artifact-change-border:#d49a17;
+}
+html[data-theme="dark"] {
+  --artifact-background:#0a0b0e;--artifact-background-light:#121419;--artifact-background-mid:#181b22;
+  --artifact-border-light:#23262e;--artifact-border-dark:#343844;--artifact-primary-brand:#6a92ff;
+  --artifact-primary-highlight:#f5f7fb;--artifact-primary-hover:#88a8ff;--artifact-selected:#1a2030;
+  --artifact-text-primary:#eef0f4;--artifact-text-secondary:#9aa0ad;--artifact-text-highlight:#14213d;
+  --artifact-positive-background:#0e2a1d;--artifact-positive-text:#c8f5da;--artifact-positive:#46d39a;
+  --artifact-negative:#ff6b6b;--artifact-change-background:#342a16;--artifact-change-text:#f5d68a;
+  --artifact-change-border:#947126;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--artifact-background);color:var(--artifact-text-primary);font:15px/1.55 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+button,input,select{font:inherit}
+button,select{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,[tabindex="0"]:focus-visible{outline:3px solid var(--artifact-primary-brand);outline-offset:2px}
+[hidden]{display:none!important}
+.app{max-width:1180px;margin:0 auto;padding:24px 18px 44px}
+.header{padding-bottom:18px;border-bottom:1px solid var(--artifact-border-light)}
+.eyebrow,.field-label{color:var(--artifact-text-secondary);font:500 12px/1.4 "SF Mono","Cascadia Code",Consolas,monospace;letter-spacing:.1em;text-transform:uppercase}
+.eyebrow{margin:0 0 10px}
+h1,h2,h3,h4{margin:0;color:var(--artifact-text-primary)}
+h1{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:350;letter-spacing:-.04em;line-height:1.1}
+h2{font-size:1.08rem;font-weight:650}h3{font-size:.96rem;font-weight:650}h4{font-size:.9rem;font-weight:650}
+p{margin:0}.sub{margin-top:7px;color:var(--artifact-text-secondary)}
+.privacy{margin-top:9px;color:var(--artifact-text-secondary);font-size:12px}
+.upload{margin:18px 0;padding:20px;border:1px dashed var(--artifact-border-dark);border-radius:8px;background:var(--artifact-selected);text-align:center}
+.upload.dragover{border-color:var(--artifact-primary-brand)}
+.upload h2{margin-bottom:5px}.upload p{margin-bottom:13px;color:var(--artifact-text-secondary);font-size:13px}
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.button{min-height:38px;padding:7px 12px;border:1px solid var(--artifact-border-dark);border-radius:6px;background:var(--artifact-background);color:var(--artifact-text-primary)}
+.button:hover{border-color:var(--artifact-primary-brand)}
+.button.primary{border-color:var(--artifact-primary-brand);background:var(--artifact-primary-brand);color:var(--artifact-background)}
+.button.primary:hover{background:var(--artifact-primary-hover)}
+.button.small{min-height:34px;padding:6px 10px;font-size:12px}
+#fileInput{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.status{margin-top:10px;color:var(--artifact-text-secondary);font-size:12px;overflow-wrap:anywhere}
+.status.error{color:var(--artifact-negative)}
+.controls{display:flex;flex-wrap:wrap;align-items:end;gap:10px 14px;padding:13px 0;border-bottom:1px solid var(--artifact-border-light)}
+.control{display:grid;gap:4px}.control label{color:var(--artifact-text-secondary);font-size:12px}
+select,input[type="search"]{min-height:38px;min-width:175px;max-width:100%;padding:7px 10px;appearance:none;border:1px solid var(--artifact-border-dark);border-radius:6px;background:var(--artifact-background);color:var(--artifact-text-primary)}
+input[type="search"]{min-width:190px}
+.pair-controls,.bulk-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.toggles{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-bottom:7px}
+.toggle{display:inline-flex;align-items:center;gap:6px;color:var(--artifact-text-primary);font-size:12px;cursor:pointer}
+.toggle input{width:15px;height:15px;accent-color:var(--artifact-primary-brand)}
+.site-heading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:10px;margin:20px 0 12px}
+.site-heading .minor{color:var(--artifact-text-secondary);font-size:12px}
+.compare-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:8px;scrollbar-color:var(--artifact-border-dark) var(--artifact-background-light)}
+.compare-grid{display:grid;grid-template-columns:repeat(2,minmax(410px,1fr));gap:14px;min-width:834px;align-items:start}
+.device{min-width:0;padding:14px;border:1px solid var(--artifact-border-light);border-radius:8px}
+.device-header{position:sticky;top:0;z-index:1;margin:-2px -2px 12px;padding:3px 2px 11px;border-bottom:1px solid var(--artifact-border-light);background:var(--artifact-background)}
+.device-title{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.device-meta,.compare-label{margin-top:6px;color:var(--artifact-text-secondary);font-size:12px;overflow-wrap:anywhere}
+.badge{flex:none;display:inline-block;padding:2px 7px;border:1px solid var(--artifact-border-light);border-radius:999px;color:var(--artifact-text-secondary);font-size:10px}
+.data-section{margin-top:12px}
+.data-section>h3{margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--artifact-border-light)}
+.tree{min-width:0;margin:4px 0}
+.tree>summary{padding:5px 0;cursor:pointer;color:var(--artifact-text-primary);font-weight:600;list-style:none}
+.tree>summary::-webkit-details-marker{display:none}
+.tree>summary::before{content:"＋";display:inline-block;width:18px;color:var(--artifact-text-secondary)}
+.tree[open]>summary::before{content:"−"}
+.nested{margin:2px 0 4px 7px;padding-left:9px;border-left:1px solid var(--artifact-border-light)}
+.field-row{display:grid;grid-template-columns:minmax(105px,.8fr) minmax(0,1.2fr);align-items:start;gap:8px;padding:5px 0;border-top:1px solid var(--artifact-border-light);overflow-wrap:anywhere}
+.field-row.changed{background:var(--artifact-change-background);color:var(--artifact-change-text)}
+.field-label{padding-top:2px;font-size:10px;letter-spacing:.055em}
+.field-value{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.muted{color:var(--artifact-text-secondary);font-size:12px}.sensitive{color:var(--artifact-text-secondary);font-style:italic}
+.array-list{display:grid;gap:7px;margin:7px 0}
+.array-item{min-width:0;padding:8px;border:1px solid var(--artifact-border-light);border-radius:6px}
+.array-item.changed{border-color:var(--artifact-change-border);background:var(--artifact-change-background)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:2px 7px;border:1px solid var(--artifact-border-light);border-radius:999px;font-size:11px;overflow-wrap:anywhere}
+.chip.changed{border-color:var(--artifact-change-border);background:var(--artifact-change-background);color:var(--artifact-change-text)}
+.interface-section{margin-top:14px}
+.interface-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:6px;border-bottom:1px solid var(--artifact-border-light)}
+.interface-heading .minor{color:var(--artifact-text-secondary);font-size:11px}
+.interface-list{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:8px}
+.interface-card{min-width:0;padding:9px;border:1px solid var(--artifact-border-light);border-radius:6px}
+.interface-card.changed{border-color:var(--artifact-change-border);background:var(--artifact-change-background)}
+.interface-card-title{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:6px}
+.interface-placeholder{visibility:hidden}
+.alignment-spacer{display:block;height:0;min-height:0;pointer-events:none}
+.notice{margin-top:12px;color:var(--artifact-text-secondary);font-size:12px}
+@media(max-width:700px){
+  .app{padding:18px 12px 32px}.controls{align-items:stretch}
+  .control,.pair-controls,.pair-controls .control,select,input[type="search"]{width:100%}
+  .compare-grid{min-width:834px;grid-template-columns:repeat(2,minmax(410px,1fr))}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media print{
+  @page{size:auto!important}
+  body{margin:0;padding:.4in .55in;background:#fff;color:#111;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .app,main{width:100%!important;max-width:100%!important}
+  .upload,.controls,.notice{display:none!important}
+  .compare-scroll{overflow:visible!important}
+  .compare-grid{min-width:0!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .device-header{position:static!important}
+  .device,.data-section,.interface-card,.array-item{break-inside:avoid}
+  details:not([open])>:not(summary){display:block!important}
+  button,[role="button"]{display:none!important}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="app" data-glean-id="viewer-app">
+<header class="header" data-glean-id="viewer-header">
+  <p class="eyebrow">Classic Branch Connectors · Local configuration review</p>
+  <h1>Configuration comparison</h1>
+  <p class="sub">Pair devices by site and inspect corresponding settings side by side.</p>
+  <p class="privacy">Files are processed in this browser only. Sensitive values stay masked unless revealed.</p>
+</header>
+<section class="upload" id="dropZone" tabindex="0" role="button" aria-label="Choose or drop configuration exports" data-glean-id="upload-area">
+  <h2>Load configuration exports</h2><p>Select multiple JSON or TXT exports, or drag them here.</p>
+  <input id="fileInput" type="file" accept=".json,.txt,.log,application/json,text/plain" multiple>
+  <div class="actions">
+    <button class="button primary" id="chooseFiles" type="button">Choose files</button>
+    <button class="button" id="clearFiles" type="button" hidden>Clear loaded data</button>
+    <button class="button" id="downloadHtml" type="button">Download standalone HTML</button>
+    <button class="button" id="printButton" type="button" hidden>Print / Save PDF</button>
+  </div>
+  <div class="status" id="uploadStatus" aria-live="polite">No files loaded.</div>
+</section>
+<section id="workspace" hidden data-glean-id="comparison-workspace">
+  <div class="controls" data-glean-id="comparison-controls">
+    <div class="control"><label for="siteSelect">Site</label><select id="siteSelect"></select></div>
+    <div class="pair-controls" id="pairControls"></div>
+    <div class="control"><label for="searchInput">Search fields</label><input id="searchInput" type="search" placeholder="Address, DNS, DHCP, status…"></div>
+    <div class="bulk-controls">
+      <button class="button small" id="expandAll" type="button">Expand all</button>
+      <button class="button small" id="collapseAll" type="button">Collapse all</button>
+    </div>
+    <div class="toggles">
+      <label class="toggle"><input id="highlightToggle" type="checkbox" checked> Highlight differences</label>
+      <label class="toggle"><input id="onlyDiffToggle" type="checkbox"> Differences only</label>
+      <label class="toggle"><input id="revealToggle" type="checkbox"> Reveal sensitive values</label>
+    </div>
+    <button class="button small" id="printTop" type="button">Print / Save PDF</button>
+  </div>
+  <div id="siteView" data-glean-id="site-comparison"></div>
+  <p class="notice">Matching interfaces align row by row. Alignment recalculates after expand/collapse, filtering, and resizing.</p>
+</section>
+</main>
+<script>
+"use strict";
+const S={records:[],sites:[],site:"",a:"",b:"",search:"",highlight:true,onlyDiff:false,reveal:false,openAll:null,openState:new Map()};
+const $=id=>document.getElementById(id),MISSING=Symbol("missing");
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const slug=v=>String(v??"item").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"item";
+const secret=k=>/(nonce|passcode|password|secret|token|private.?key|credential|api.?key)/i.test(k);
+const has=(o,k)=>!!o&&Object.prototype.hasOwnProperty.call(o,k);
+const label=k=>String(k).replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/[_-]+/g," ").replace(/\s+/g," ").trim().replace(/\b\w/g,c=>c.toUpperCase());
+
+function locate(r){
+ const seen=new Set();
+ function walk(x,keys,d){
+  if(!x||typeof x!=="object"||d>10||seen.has(x))return null;seen.add(x);
+  if(x.interfaces?.network&&Array.isArray(x.interfaces.network.config))return{value:x,keys};
+  if(Array.isArray(x)){for(let i=0;i<x.length;i++){const f=walk(x[i],keys.concat(String(i)),d+1);if(f)return f;}}
+  else for(const[k,v]of Object.entries(x))if(v&&typeof v==="object"){const f=walk(v,keys.concat(k),d+1);if(f)return f;}
+  return null;
+ }
+ return walk(r,[],0);
+}
+function isRecord(x){return!!x&&!Array.isArray(x)&&typeof x==="object"&&!!locate(x);}
+function collect(x,out=[]){
+ if(Array.isArray(x)){for(const v of x)isRecord(v)?out.push(v):(v&&typeof v==="object"&&collect(v,out));}
+ else if(isRecord(x))out.push(x);
+ else if(x&&typeof x==="object")for(const v of Object.values(x))if(v&&typeof v==="object")collect(v,out);
+ return out;
+}
+function parse(text){
+ try{return JSON.parse(text);}catch(_){
+  for(let s=0;s<text.length;s++){
+   if(text[s]!=="["&&text[s]!=="{")continue;const stack=[];let q=false,e=false;
+   for(let i=s;i<text.length;i++){const c=text[i];
+    if(q){if(e)e=false;else if(c==="\\")e=true;else if(c==='"')q=false;continue;}
+    if(c==='"'){q=true;continue;}if(c==="{"||c==="[")stack.push(c);
+    else if(c==="}"||c==="]"){const o=stack.pop();if((c==="}"&&o!=="{")||(c==="]"&&o!=="["))break;
+     if(!stack.length){try{return JSON.parse(text.slice(s,i+1));}catch(_){break;}}}
+   }
+  }
+  throw new Error("Could not find a complete JSON object or array.");
+ }
+}
+async function fileText(file){
+ const b=await file.arrayBuffer();let t=new TextDecoder("utf-8").decode(b);
+ if(t.includes("\uFFFD"))t=new TextDecoder("windows-1252").decode(b);
+ return t.replace(/^\uFEFF/,"");
+}
+function ti(r){return locate(r)||{value:{},keys:["deviceTemplate"]};}
+function tmpl(r){return ti(r).value||{};}
+function ifaces(r){const c=tmpl(r).interfaces?.network?.config;return Array.isArray(c)?c:[];}
+function nameOf(r){const t=tmpl(r),p=r.provUrlData||{};return r.name||r.deviceName||r.hostname||p.name||p.deviceName||t.name||t.deviceName||t.serialNumber||r.id||"Unnamed Branch Connector";}
+function locOf(r){const t=tmpl(r),p=r.provUrlData||{};let x=r.location||p.location||t.location||{};if(typeof x==="string")x={name:x};return{name:x.name||x.city||x.locationName||"",country:x.country||x.countryName||"",id:x.id||x.locationId||""};}
+function groupOf(r){return r.bcGroup||r.provUrlData?.bcGroup||{};}
+function siteOf(r){const l=locOf(r),g=groupOf(r);return{key:[l.id||l.name||g.id||g.name||"unassigned",l.country].join("|").toLowerCase(),label:[l.name,l.country].filter(Boolean).join(", ")||g.name||g.id||"Unassigned site"};}
+function recKey(r){return String(r.id||r.provUrlData?.id||tmpl(r).serialNumber||`${nameOf(r)}|${siteOf(r).key}`);}
+function makeSites(){const m=new Map();for(const r of S.records){const s=siteOf(r);if(!m.has(s.key))m.set(s.key,{...s,records:[]});m.get(s.key).records.push(r);}S.sites=[...m.values()].sort((a,b)=>a.label.localeCompare(b.label));}
+function devices(site){return[...site.records].sort((a,b)=>nameOf(a).localeCompare(nameOf(b),undefined,{numeric:true}));}
+function defaultPair(ds){const a=ds.find(x=>/BC[-_ ]?0?1\b/i.test(nameOf(x))),b=ds.find(x=>/BC[-_ ]?0?2\b/i.test(nameOf(x)));return a&&b?[recKey(a),recKey(b)]:[recKey(ds[0]),ds[1]?recKey(ds[1]):""];}
+function equal(a,b){
+ if(a===b)return true;if(a===MISSING||b===MISSING||a===null||b===null||typeof a!=="object"||typeof b!=="object")return false;
+ if(Array.isArray(a)!==Array.isArray(b))return false;const ka=Object.keys(a),kb=Object.keys(b);
+ return ka.length===kb.length&&ka.every(k=>has(b,k)&&equal(a[k],b[k]));
+}
+function readable(v){if(v===null)return"Not set";if(v==="")return"Blank";if(typeof v==="boolean")return v?"Yes":"No";if(typeof v==="string"&&/^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(v))return v.split("_").map(w=>w[0]+w.slice(1).toLowerCase()).join(" ");return String(v);}
+function scrub(v){if(Array.isArray(v))return v.map(scrub);if(v&&typeof v==="object"){const o={};for(const[k,x]of Object.entries(v))o[k]=secret(k)?"[masked]":scrub(x);return o;}return v;}
+function searchHit(k,v){if(!S.search)return true;let txt="";try{txt=JSON.stringify(scrub(v));}catch(_){txt=String(v);}return(k+" "+txt).toLowerCase().includes(S.search.toLowerCase());}
+
+/* Keep array matching independent of mutable fields like subnet address or fixed IP.
+   Use identity fields when present; otherwise match by array position. */
+function entries(arr){
+ const stable=["id","uuid","key","name","interfaceName","hostName","hostname","host","macAddress","mac"];
+ const raw=arr.map(x=>{if(!x||typeof x!=="object"||Array.isArray(x))return null;for(const k of stable)if(x[k]!=null&&typeof x[k]!=="object")return k+"="+x[k];return null;});
+ const counts={};raw.forEach(x=>{if(x)counts[x]=(counts[x]||0)+1;});
+ return arr.map((value,index)=>({value,index,key:raw[index]&&counts[raw[index]]===1?"id:"+encodeURIComponent(raw[index]):"position:"+index}));
+}
+function entryTitle(v,i){if(v&&typeof v==="object"&&!Array.isArray(v))for(const k of ["name","interfaceName","hostName","hostname","host","id","address","ipAddress","macAddress","vlanId"])if(v[k]!=null)return label(k)+": "+readable(v[k]);return"Entry "+(i+1);}
+function openFor(key,defaultValue){if(S.openState.has(key))return S.openState.get(key);if(S.openAll!==null)return S.openAll;return defaultValue;}
+function diffBadge(diff,missing){return S.b&&diff?`<span class="badge">${missing||"Different"}</span>`:"";}
+
+function renderNode(k,a,b,hasA,hasB,key,depth=0){
+ if(!hasA&&!hasB)return"";
+ const av=hasA?a:MISSING,bv=hasB?b:MISSING,diff=!equal(av,bv);
+ if(S.onlyDiff&&S.b&&!diff)return"";
+ const mark=diff&&S.b&&S.highlight?"changed":"",badge=diffBadge(diff,!hasA?"Only on BC B":!hasB?"Only on BC A":"");
+ if(!hasA)return searchHit(k,b)?`<div class="field-row changed"><span class="field-label">${esc(label(k))}</span><span class="field-value muted">Not present on this BC</span>${badge}</div>`:"";
+ if(secret(k)&&!S.reveal)return searchHit(k,a)?`<div class="field-row ${mark}"><span class="field-label">${esc(label(k))}</span><span class="field-value sensitive">••••••${diff&&S.b?" (value differs)":""}</span>${badge}</div>`:"";
+ if(Array.isArray(a)||Array.isArray(b)){
+  const aa=Array.isArray(a)?a:[],bb=Array.isArray(b)?b:[];
+  if([...aa,...bb].every(x=>x===null||typeof x!=="object")){
+   const chips=aa.map((v,i)=>{const d=i>=bb.length||!equal(v,bb[i]);if(S.onlyDiff&&S.b&&!d)return"";if(!searchHit(k,v))return"";return`<span class="chip ${d&&S.highlight?"changed":""}">${esc(readable(v))}</span>`;}).join("");
+   if(S.search&&!chips)return"";
+   return`<div class="field-row ${mark}"><span class="field-label">${esc(label(k))}</span><span class="field-value"><span class="chips">${chips||`<span class="muted">No entries on this BC</span>`}</span>${diff&&S.b?`<span class="muted">List differs from paired BC.</span>`:""}</span>${badge}</div>`;
+  }
+  const ea=entries(aa),eb=entries(bb),ma=new Map(ea.map(x=>[x.key,x])),mb=new Map(eb.map(x=>[x.key,x]));
+  const ids=[...new Set([...ma.keys(),...mb.keys()])];
+  const cards=ids.map((id,i)=>{
+   const x=ma.get(id),y=mb.get(id),childKey=key+"/"+id;
+   if(!x)return`<article class="array-item changed"><div class="array-item-title">${esc(entryTitle(y.value,i))} ${diffBadge(true,"Only on BC B")}</div><p class="muted">This entry is not present on this BC.</p></article>`;
+   const body=renderNode(entryTitle(x.value,i),x.value,y?y.value:MISSING,true,!!y,childKey,depth+1);
+   return body?`<article class="array-item ${y&&!equal(x.value,y.value)&&S.highlight?"changed":""}" data-glean-id="array-entry-${slug(childKey)}">${body}</article>`:"";
+  }).join("");
+  if(S.search&&!searchHit(k,aa)&&!cards)return"";
+  return`<details class="tree synced-detail" data-sync-key="${esc(key)}" ${openFor(key,depth<1)?"open":""} data-glean-id="disclosure-${slug(key)}"><summary>${esc(label(k))} <span class="muted">(${aa.length} entries)</span>${badge}</summary><div class="nested array-list">${cards||`<p class="muted">No matching entries.</p>`}</div></details>`;
+ }
+ if(a&&typeof a==="object"){
+  const right=b&&typeof b==="object"&&!Array.isArray(b)?b:{};
+  const keys=[...new Set([...Object.keys(a),...Object.keys(right)])];
+  const children=keys.map(child=>{const xa=has(a,child),xb=has(right,child);return renderNode(child,xa?a[child]:MISSING,xb?right[child]:MISSING,xa,xb,key+"/"+child,depth+1);}).join("");
+  if(!children)return`<div class="field-row ${mark}"><span class="field-label">${esc(label(k))}</span><span class="field-value muted">No values</span>${badge}</div>`;
+  return`<details class="tree synced-detail" data-sync-key="${esc(key)}" ${openFor(key,depth<1)?"open":""} data-glean-id="disclosure-${slug(key)}"><summary>${esc(label(k))}${badge}</summary><div class="nested">${children}</div></details>`;
+ }
+ if(!searchHit(k,a))return"";
+ return`<div class="field-row ${mark}"><span class="field-label">${esc(label(k))}</span><span class="field-value">${esc(readable(a))}</span>${badge}</div>`;
+}
+function renderSection(title,a,b,key,id){
+ if(a===undefined&&b===undefined)return"";
+ const body=renderNode(title,a??MISSING,b??MISSING,a!==undefined,b!==undefined,key,0);
+ return body?`<section class="data-section" data-glean-id="${esc(id)}"><h3>${esc(title)}</h3>${body}</section>`:"";
+}
+function typeOf(x){const t=String(x?.interfaceType||x?.type||"").toUpperCase();return t.includes("WAN")?"WAN":t.includes("LAN")?"LAN":"OTHER";}
+function renderInterfaceGroup(kind,r,peer,id){
+ const left=ifaces(r).map((value,index)=>({value,index,key:String(value?.name||value?.interfaceName||"interface-"+index).toLowerCase()})).filter(x=>typeOf(x.value)===kind);
+ const right=peer?ifaces(peer).map((value,index)=>({value,index,key:String(value?.name||value?.interfaceName||"interface-"+index).toLowerCase()})).filter(x=>typeOf(x.value)===kind):[];
+ const ma=new Map(left.map(x=>[x.key,x])),mb=new Map(right.map(x=>[x.key,x]));
+ const keys=[...new Set([...ma.keys(),...mb.keys()])].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+ const cards=keys.map((key,index)=>{
+  const x=ma.get(key),y=mb.get(key),source=x?.value||y?.value,name=source?.name||source?.interfaceName||source?.type||"Interface "+(index+1),pairKey=kind+"/"+key;
+  if(!x)return`<article class="interface-card interface-placeholder" data-pair-key="${esc(pairKey)}" data-glean-id="interface-${esc(id)}-${slug(key)}" aria-hidden="true"><div class="interface-card-title"><h4>${esc(name)}</h4><span class="badge">Only on BC B</span></div><p class="muted">Not configured on this BC.</p></article>`;
+  const body=renderNode("Interface Configuration",x.value,y?y.value:MISSING,true,!!y,"interface/"+pairKey,0);
+  const different=!y||!equal(x.value,y.value);
+  if(S.onlyDiff&&S.b&&!different)return"";
+  return`<article class="interface-card ${different&&S.highlight?"changed":""}" data-pair-key="${esc(pairKey)}" data-glean-id="interface-${esc(id)}-${slug(key)}"><div class="interface-card-title"><h4>${esc(name)}</h4><span class="badge">${kind}</span>${source?.vlanLink?`<span class="badge">VLAN of ${esc(source.vlanLink)}</span>`:""}${different?`<span class="badge">Different</span>`:""}</div>${body}</article>`;
+ }).join("");
+ return`<section class="interface-section" data-interface-kind="${kind}" data-glean-id="interface-section-${kind.toLowerCase()}"><div class="interface-heading"><h3>${kind==="OTHER"?"Other interface entries":kind+" interfaces"}</h3><span class="minor">${left.length} on this BC</span></div><div class="interface-list">${cards||`<p class="muted">${S.onlyDiff&&peer?"No differences in this section.":`No ${kind} interfaces found.`}</p>`}</div></section>`;
+}
+function omit(o,k){if(!o||typeof o!=="object"||Array.isArray(o))return{};const c={...o};delete c[k];return c;}
+function removePath(obj,keys){const c=JSON.parse(JSON.stringify(obj));let x=c;for(let i=0;i<keys.length-1;i++){if(!x||typeof x!=="object")return c;x=x[keys[i]];}if(x&&typeof x==="object"&&keys.length)delete x[keys[keys.length-1]];return c;}
+function panelBody(r,peer,id){
+ const a=ti(r),b=peer?ti(peer):{value:{},keys:a.keys},t=a.value||{},u=b.value||{};let out="";
+ out+=renderSection("Record, site & provisioning",removePath(r,a.keys),peer?removePath(peer,b.keys):undefined,"section/record","record-"+id);
+ out+=renderSection("Device template",omit(t,"interfaces"),peer?omit(u,"interfaces"):undefined,"section/template","template-"+id);
+ out+=renderSection("Interface settings",omit(t.interfaces,"network"),peer?omit(u.interfaces,"network"):undefined,"section/interface-settings","interface-settings-"+id);
+ out+=renderSection("Network & management settings",omit(t.interfaces?.network,"config"),peer?omit(u.interfaces?.network,"config"):undefined,"section/network-settings","network-settings-"+id);
+ out+=renderInterfaceGroup("WAN",r,peer,id);out+=renderInterfaceGroup("LAN",r,peer,id);
+ if(ifaces(r).some(x=>typeOf(x)==="OTHER")||(peer&&ifaces(peer).some(x=>typeOf(x)==="OTHER")))out+=renderInterfaceGroup("OTHER",r,peer,id);
+ return out;
+}
+
+/* Dynamic vertical alignment: pair interface cards by name, add measured spacers
+   before whichever card starts higher, then equalize the paired row heights. */
+let alignmentQueued=false;
+function queueAlignment(){
+ if(alignmentQueued)return;alignmentQueued=true;
+ requestAnimationFrame(()=>{alignmentQueued=false;alignColumns();requestAnimationFrame(alignColumns);});
+}
+function ensureSpacer(card){
+ let spacer=card.previousElementSibling;
+ if(!spacer||!spacer.classList.contains("alignment-spacer")){
+  spacer=document.createElement("div");spacer.className="alignment-spacer";spacer.setAttribute("aria-hidden","true");card.parentNode.insertBefore(spacer,card);
+ }
+ return spacer;
+}
+function alignColumns(){
+ const columns=[...document.querySelectorAll("#siteView .device")];if(columns.length!==2)return;
+ columns.forEach(col=>{
+  col.querySelectorAll(".interface-section").forEach(s=>s.style.marginTop="14px");
+  col.querySelectorAll(".interface-card").forEach(c=>{c.style.minHeight="";const p=c.previousElementSibling;if(p?.classList.contains("alignment-spacer"))p.style.height="0px";});
+ });
+ for(const kind of ["WAN","LAN","OTHER"]){
+  let secs=columns.map(col=>col.querySelector(`.interface-section[data-interface-kind="${kind}"]`));
+  if(!secs[0]||!secs[1])continue;
+  let y0=secs[0].getBoundingClientRect().top,y1=secs[1].getBoundingClientRect().top;
+  if(Math.abs(y0-y1)>1){
+   const earlier=y0<y1?secs[0]:secs[1];
+   earlier.style.marginTop=(14+Math.abs(y0-y1))+"px";
+  }
+  secs=columns.map(col=>col.querySelector(`.interface-section[data-interface-kind="${kind}"]`));
+  const maps=secs.map(s=>new Map([...s.querySelectorAll(".interface-card[data-pair-key]")].map(c=>[c.dataset.pairKey,c])));
+  const ordered=[...new Set([...maps[0].keys(),...maps[1].keys()])];
+  for(const key of ordered){
+   const cards=maps.map(m=>m.get(key));if(!cards[0]||!cards[1])continue;
+   let topA=cards[0].getBoundingClientRect().top,topB=cards[1].getBoundingClientRect().top;
+   if(Math.abs(topA-topB)>1){
+    const earlier=topA<topB?cards[0]:cards[1],spacer=ensureSpacer(earlier);
+    spacer.style.height=(Math.abs(topA-topB))+"px";
+   }else{
+    ensureSpacer(cards[0]).style.height="0px";ensureSpacer(cards[1]).style.height="0px";
+   }
+   const height=Math.max(cards[0].getBoundingClientRect().height,cards[1].getBoundingClientRect().height);
+   cards[0].style.minHeight=height+"px";cards[1].style.minHeight=height+"px";
+  }
+ }
+}
+function renderSite(){
+ const site=S.sites.find(x=>x.key===S.site);if(!site){$("siteView").innerHTML="";return;}
+ const ds=devices(site);
+ if(ds.length>1&&(!ds.some(x=>recKey(x)===S.a)||!ds.some(x=>recKey(x)===S.b)||S.a===S.b))[S.a,S.b]=defaultPair(ds);
+ if(ds.length===1){S.a=recKey(ds[0]);S.b="";}
+ const a=ds.find(x=>recKey(x)===S.a)||ds[0],b=ds.find(x=>recKey(x)===S.b)||null;
+ $("pairControls").innerHTML=ds.length>1?`<div class="control"><label for="deviceA">BC A</label><select id="deviceA">${ds.map(d=>`<option value="${esc(recKey(d))}">${esc(nameOf(d))}</option>`).join("")}</select></div><div class="control"><label for="deviceB">Compare with</label><select id="deviceB">${ds.map(d=>`<option value="${esc(recKey(d))}">${esc(nameOf(d))}</option>`).join("")}</select></div>`:`<p class="muted">One device loaded for this site.</p>`;
+ if(ds.length>1){$("deviceA").value=S.a;$("deviceB").value=S.b;$("deviceA").onchange=e=>{S.a=e.target.value;S.openState.clear();S.openAll=null;renderSite();};$("deviceB").onchange=e=>{S.b=e.target.value;S.openState.clear();S.openAll=null;renderSite();};}
+ const loc=locOf(a),group=groupOf(a),subtitle=[loc.country,group.name?"Group "+group.name:""].filter(Boolean).join(" · ");
+ const makePanel=(r,peer,side)=>{
+  const t=tmpl(r),status=r.status||r.provUrlData?.status||t.status||t.deploymentStatus||"",model=t.model||t.modelName||r.model||"",serial=t.serialNumber||r.serialNumber||"",meta=[model,serial?`Serial ${serial}`:"",status?`Status ${status}`:""].filter(Boolean).join(" · "),id=slug(recKey(r));
+  return`<section class="device" data-glean-id="device-${id}"><header class="device-header"><div class="device-title"><h2>${esc(nameOf(r))}</h2><span class="badge">BC ${side}</span></div><p class="device-meta">${esc(meta||"Device details are listed below.")}</p><p class="compare-label">${peer?"Paired with "+esc(nameOf(peer)):"No comparison device selected"}</p></header>${panelBody(r,peer,id)}</section>`;
+ };
+ $("siteView").innerHTML=`<div class="site-heading" data-glean-id="selected-site"><div><p class="eyebrow">Selected site</p><h2>${esc(site.label)}</h2>${subtitle?`<p class="minor">${esc(subtitle)}</p>`:""}</div><span class="minor">${ds.length} device${ds.length===1?"":"s"}${b?" · paired comparison":""}</span></div><div class="compare-scroll" tabindex="0" aria-label="Side-by-side comparison; scroll horizontally on narrow screens"><div class="compare-grid">${makePanel(a,b,"A")}${b?makePanel(b,a,"2"):""}</div></div>${ds.length===1?`<p class="muted">Upload the peer BC export to compare both devices.</p>`:""}`;
+ queueAlignment();
+}
+function render(){
+ const m=new Map();for(const r of S.records){const s=siteOf(r);if(!m.has(s.key))m.set(s.key,{...s,records:[]});m.get(s.key).records.push(r);}
+ S.sites=[...m.values()].sort((a,b)=>a.label.localeCompare(b.label));
+ $("workspace").hidden=!S.records.length;$("clearFiles").hidden=!S.records.length;$("printButton").hidden=!S.records.length;$("printTop").hidden=!S.records.length;
+ if(!S.records.length)return;if(!S.sites.some(x=>x.key===S.site))S.site=S.sites[0].key;
+ $("siteSelect").innerHTML=S.sites.map(s=>`<option value="${esc(s.key)}">${esc(s.label)}</option>`).join("");$("siteSelect").value=S.site;renderSite();
+}
+async function loadFiles(files){
+ const records=[...S.records],seen=new Set(records.map(recKey)),messages=[],dupes=[];
+ for(const file of files)try{
+  const found=collect(parse(await fileText(file)));if(!found.length)throw new Error("No Branch Connector template with interfaces.network.config[] was found.");
+  let added=0;for(const r of found){const k=recKey(r);if(seen.has(k)){dupes.push(nameOf(r));continue;}seen.add(k);records.push(r);added++;}
+  messages.push(`${file.name}: ${found.length} record${found.length===1?"":"s"}${added<found.length?` (${added} added)`:""}`);
+ }catch(e){messages.push(`${file.name}: ${e.message}`);}
+ if(records.length===S.records.length){$("uploadStatus").classList.add("error");$("uploadStatus").textContent=messages.join(" · ");return;}
+ S.records=records;S.a="";S.b="";S.site="";S.openState.clear();S.openAll=null;
+ $("uploadStatus").classList.remove("error");$("uploadStatus").textContent=messages.join(" · ")+(dupes.length?` · Skipped ${dupes.length} duplicate records.`:"");render();
+}
+function setAll(open){S.openAll=open;S.openState.clear();document.querySelectorAll("#siteView details[data-sync-key]").forEach(d=>d.open=open);queueAlignment();}
+$("chooseFiles").onclick=()=>$("fileInput").click();
+$("dropZone").onclick=e=>{if(!e.target.closest("button"))$("fileInput").click();};
+$("dropZone").onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();$("fileInput").click();}};
+$("fileInput").onchange=async e=>{await loadFiles([...e.target.files]);e.target.value="";};
+$("dropZone").ondragover=e=>{e.preventDefault();$("dropZone").classList.add("dragover");};
+$("dropZone").ondragleave=()=>$("dropZone").classList.remove("dragover");
+$("dropZone").ondrop=async e=>{e.preventDefault();$("dropZone").classList.remove("dragover");await loadFiles([...e.dataTransfer.files]);};
+$("siteSelect").onchange=e=>{S.site=e.target.value;S.a="";S.b="";S.openState.clear();S.openAll=null;render();};
+$("searchInput").oninput=e=>{S.search=e.target.value;renderSite();};
+$("highlightToggle").onchange=e=>{S.highlight=e.target.checked;renderSite();};
+$("onlyDiffToggle").onchange=e=>{S.onlyDiff=e.target.checked;renderSite();};
+$("revealToggle").onchange=e=>{S.reveal=e.target.checked;renderSite();};
+$("expandAll").onclick=()=>setAll(true);$("collapseAll").onclick=()=>setAll(false);
+
+/* Intercept matched disclosure clicks; update both columns and preserve state on rerender. */
+document.addEventListener("click",e=>{
+ const summary=e.target.closest("summary"),details=summary?.closest("details[data-sync-key]");if(!details)return;
+ e.preventDefault();const key=details.dataset.syncKey,open=!details.open;S.openState.set(key,open);
+ document.querySelectorAll("#siteView details[data-sync-key]").forEach(d=>{if(d.dataset.syncKey===key)d.open=open;});
+ queueAlignment();
+},true);
+$("clearFiles").onclick=()=>{
+  S.records=[]; S.sites=[]; S.site=""; S.a=""; S.b="";
+  S.search=""; S.highlight=true; S.onlyDiff=false; S.reveal=false;
+  S.openState.clear(); S.openAll=null;
+  $("fileInput").value="";
+  $("searchInput").value="";
+  $("highlightToggle").checked=true;
+  $("onlyDiffToggle").checked=false;
+  $("revealToggle").checked=false;
+  $("siteSelect").innerHTML="";
+  $("deviceA").innerHTML="";
+  $("deviceB").innerHTML="";
+  $("siteView").innerHTML="";
+  $("uploadStatus").classList.remove("error");
+  $("uploadStatus").textContent="No files loaded.";
+  $("dropZone").classList.remove("dragover");
+  render();
+  $("chooseFiles").focus();
+};
+$("printButton").onclick=$("printTop").onclick=()=>window.print();
+$("downloadHtml").onclick=()=>{
+ const clean=document.documentElement.cloneNode(true);clean.querySelector("#workspace").hidden=true;clean.querySelector("#siteView").innerHTML="";clean.querySelector("#pairControls").innerHTML="";
+ clean.querySelector("#uploadStatus").textContent="No files loaded.";clean.querySelector("#clearFiles").hidden=true;clean.querySelector("#printButton").hidden=true;clean.querySelector("#printTop").hidden=true;
+ const blob=new Blob(["<!DOCTYPE html>\n"+clean.outerHTML],{type:"text/html;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="branch-connector-viewer-2.4.html";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+window.addEventListener("resize",queueAlignment);
+if(window.ResizeObserver){
+ const observer=new ResizeObserver(queueAlignment);
+ const watch=()=>document.querySelectorAll("#siteView .device").forEach(x=>observer.observe(x));
+ new MutationObserver(watch).observe($("siteView"),{childList:true,subtree:true});
+}
+if(window.GleanBridge){
+ window.GleanBridge.postMessage({actionId:"export-pdf",type:"glean-add-menu",metadata:{label:"Export as PDF",icon:"export"}});
+ window.GleanBridge.onMessage("action",data=>{if(data.actionId==="export-pdf")window.print();});
+}
+window.addEventListener("beforeprint",()=>{document.querySelectorAll("#siteView details").forEach(d=>d.open=true);queueAlignment();});
+</script>
+</body>
+</html>
